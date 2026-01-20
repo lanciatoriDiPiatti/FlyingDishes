@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13-alpine
+    container_name: flying_dishes_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password # The user should change this in a production environment
+      POSTGRES_DB: flying_dishes
+    ports:
+      - "5432:5432" # Optional: to connect to the db from the host machine for debugging
+    restart: unless-stopped
+
+  backend:
+    build: .
+    container_name: flying_dishes_backend
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://postgres:password@db:5432/flying_dishes"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

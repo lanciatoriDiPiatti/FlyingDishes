@@ -1,0 +1,34 @@
+# controllers/votation_controller.py
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.schemas.votation import VotationIn
+from app.core.dependencies import get_current_user
+from app.models.user import User
+from app.services.votation_service import submit_votation
+
+router = APIRouter()
+
+
+# API post endpoint fot the votation:
+# We want in input a json containing 2 fields: Data array of ints and Ristornati array of ints
+# We will extract the two arrays and call different functions that:
+# - Retrieves the id of the voter from the auth token
+# - Update the votes arrays of the Day and Food models
+# - Recalculate the current_avg fields for both models
+@router.post("/votation", status_code=status.HTTP_201_CREATED)
+def create_votation(
+    payload: VotationIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # current_user.id è il voter id (estratto dal token nella dependency)
+    submit_votation(
+        db=db,
+        voter_id=current_user.id,
+        day_votes=payload.Data,
+        food_votes=payload.Ristoranti,
+    )
+    return {"ok": True}
+
