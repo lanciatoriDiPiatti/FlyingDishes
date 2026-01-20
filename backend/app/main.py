@@ -5,7 +5,6 @@ from app.controllers.users_controller import router as users_router
 from app.db.session import engine          # <- adatta import
 from app.db.base import Base               # <- adatta import
 import app.models                          # <- importa tutti i modelli
-
 app = FastAPI()
 
 @app.on_event("startup")
