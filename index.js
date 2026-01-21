@@ -59,7 +59,8 @@ function postData(formType) {
   })
 }
 
-registerForm.hidden ? postData('login') : postData('register') 
+postData('login') 
+postData('register') 
 
 
 // Invio voti
