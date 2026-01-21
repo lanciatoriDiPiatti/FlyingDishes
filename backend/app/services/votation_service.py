@@ -1,8 +1,10 @@
 # Here we implement all the logic that involves votations, like creating, updating, deleting votations, counting votes, etc.
-from backend.app.models.user import User
+from sqlalchemy import null
+from app.models.user import User
 from sqlalchemy.orm import Session
 from app.models.food import Food
 from app.models.day import Day
+import app.algo
 
 # Here we implement function to submit votation
 def submit_votation(db: Session, voter_id: int, day_votes: list[int], food_votes: list[int]):
@@ -59,5 +61,19 @@ def init_avg_computation(db: Session):
 def calculate_average(votes_list: list[int]) -> float:
     if not votes_list:
         return 0.0
-    pass
+    return sum(votes_list) / len(votes_list)
 
+def get_current_avgs(db : Session):
+    # preparo un array per salvare le medie dei ristoranti
+    foods = db.query(Food).all()
+    food_avgs = []
+    for food in foods:
+        food_avgs.append(food.current_avg)
+
+    # preparo un array per media delle date
+    data_avgs = []
+    dates = db.query(Day).all()
+    for date in dates:
+        data_avgs.append(date.current_avg)
+
+    return {"food": food_avgs, "days":data_avgs}

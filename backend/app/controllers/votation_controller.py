@@ -7,6 +7,7 @@ from app.schemas.votation import VotationIn
 from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.services.votation_service import submit_votation
+from app.services.votation_service import get_current_avgs
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ router = APIRouter()
 def create_votation(
     payload: VotationIn,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user)
 ):
     # current_user.id è il voter id (estratto dal token nella dependency)
     submit_votation(
@@ -32,3 +33,7 @@ def create_votation(
     )
     return {"ok": True}
 
+
+@router.get("/standigs",status_code=status.HTTP_200_OK)
+def get_currente_results(db: Session = Depends(get_db)):
+    return get_current_avgs(db=db)

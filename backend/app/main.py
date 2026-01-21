@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.controllers.auth_controller import router as auth_router
 from app.controllers.users_controller import router as users_router
+from app.controllers.votation_controller import router as votation_router
 
 from app.db.session import engine          # <- adatta import
 from app.db.base import Base               # <- adatta import
@@ -33,7 +34,7 @@ def on_startup():
 
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(users_router, prefix="/users", tags=["users"])
-
+app.include_router(votation_router, prefix= "/votation", tags=["votation"])
 
 
 

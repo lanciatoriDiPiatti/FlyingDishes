@@ -4,7 +4,6 @@ def check_flag(data):
     return print("Sostituire con algoritmo di checking dei flag")
 
 def calculate_average(data: list[int]) -> float:
-    print (sum(data) / len(data))
     return sum(data) / len(data)
 
 def calculate_pvariance(data: list[float]) -> float:
