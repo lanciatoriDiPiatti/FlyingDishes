@@ -4,7 +4,7 @@ from app.models.user import User
 from sqlalchemy.orm import Session
 from app.models.food import Food
 from app.models.day import Day
-import app.algo
+import backend.app.algo as algo
 
 # Here we implement function to submit votation
 def submit_votation(db: Session, voter_id: int, day_votes: list[int], food_votes: list[int]):
@@ -41,7 +41,10 @@ def submit_votation(db: Session, voter_id: int, day_votes: list[int], food_votes
     db.commit()
 
 
-
+current_avg_list_days = []
+current_mean_list_days = []
+current_avg_list_foods = []
+current_mean_list_foods = []
 # Now we inmplement the function that starts the process of average computation
 def init_avg_computation(db: Session):
     
@@ -52,28 +55,32 @@ def init_avg_computation(db: Session):
     days = db.query(Day).all()
     for day in days:
         day.current_avg = calculate_average(day.votes)
+        day.current_var = calculate_pvariance(day.votes)
+        current_avg_list_days.append(day.current_avg)
+        current_mean_list_days.append(day.current_var)
 
     foods = db.query(Food).all()
     for food in foods:
         food.current_avg = calculate_average(food.votes)
+        food.current_var = calculate_pvariance(food.votes)
+        current_avg_list_foods.append(food.current_avg)
+        current_mean_list_foods.append(food.current_var)
 
 
 def calculate_average(votes_list: list[int]) -> float:
     if not votes_list:
         return 0.0
-    return sum(votes_list) / len(votes_list)
+    else:
+        return algo.calculate_average(votes_list)
+    
+def calculate_pvariance(votes_list: list[float]) -> float:
+    if not votes_list:
+        return 0.0
+    else:
+        return algo.calculate_pvariance(votes_list)
+    
+def final_choice_days(average: list[int], mean: list[float]) -> int:
+    return algo.final_choice(current_avg_list_days, current_mean_list_days)
 
-def get_current_avgs(db : Session):
-    # preparo un array per salvare le medie dei ristoranti
-    foods = db.query(Food).all()
-    food_avgs = []
-    for food in foods:
-        food_avgs.append(food.current_avg)
-
-    # preparo un array per media delle date
-    data_avgs = []
-    dates = db.query(Day).all()
-    for date in dates:
-        data_avgs.append(date.current_avg)
-
-    return {"food": food_avgs, "days":data_avgs}
+def final_choice_foods(average: list[int], mean: list[float]) -> int:
+    return algo.final_choice(current_avg_list_foods, current_mean_list_foods)
