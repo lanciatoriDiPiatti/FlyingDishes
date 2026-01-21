@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Flying Dishes</title>
+  </head>
+  <body>
+    <header>
+      <button id="login-btn">Log in</button>
+      <button id="register-btn">Sign in</button>
+    </header>
+
+    <div class="forms" hidden>
+      <form id="register-form">
+        <h2>Registrazione</h2>
+
+        <label for="register-name">Nome utente</label>
+        <input type="text" name="register-name" id="register-name" />
+
+        <label for="register-pswd">Password</label>
+        <input type="password" name="register-pswd" id="register-pswd" />
+
+        <button type="submit">Registrati</button>
+      </form>
+
+      <form id="login-form" hidden>
+        <h2>Login</h2>
+
+        <label for="login-name">Nome utente</label>
+        <input type="text" name="login-name" id="login-name" />
+
+        <label for="login-pswd">Password</label>
+        <input type="password" name="login-pswd" id="login-pswd" />
+
+        <button type="submit">Entra</button>
+      </form>
+    </div>
+
+    <div class="content" hidden>
+      <form class="content-form">
+        <div class="columns-container">
+          <div class="column">
+            <h3>Ristoranti</h3>
+
+            <div class="item-row-ristorante">
+              <label for="pizzeria">Pizzeria</label>
+              <input type="number" id="pizzeria" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-ristorante">
+              <label for="sushi">Sushi</label>
+              <input type="number" id="sushi" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-ristorante">
+              <label for="trattoria">Trattoria</label>
+              <input type="number" id="trattoria" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-ristorante">
+              <label for="mcdonald">McDonald</label>
+              <input type="number" id="mcdonald" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-ristorante">
+              <label for="kebabbaro">Kebabbaro</label>
+              <input type="number" id="kebabbaro" min="1" max="5" placeholder="Voto" />
+            </div>
+          </div>
+
+          <div class="column">
+            <h3>Date</h3>
+
+            <div class="item-row-data">
+              <label for="data1">19/01/2026</label>
+              <input type="number" id="data1" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-data">
+              <label for="data2">20/01/2026</label>
+              <input type="number" id="data2" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-data">
+              <label for="data3">21/01/2026</label>
+              <input type="number" id="data3" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-data">
+              <label for="data4">22/01/2026</label>
+              <input type="number" id="data4" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-data">
+              <label for="data5">26/01/2026</label>
+              <input type="number" id="data5" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-data">
+              <label for="data6">27/01/2026</label>
+              <input type="number" id="data6" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-data">
+              <label for="data7">28/01/2026</label>
+              <input type="number" id="data7" min="1" max="5" placeholder="Voto" />
+            </div>
+            <div class="item-row-data">
+              <label for="data8">29/01/2026</label>
+              <input type="number" id="data8" min="1" max="5" placeholder="Voto" />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit">Invia</button>
+      </form>
+    </div>
+
+    <script src="index.js" defer></script>
+  </body>
+</html>
