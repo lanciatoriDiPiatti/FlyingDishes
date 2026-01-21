@@ -27,6 +27,18 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
     content.hidden = false
   }
 
+  function pushVotesData(array, dataType) {
+    document.querySelectorAll(`.item-row-${dataType}`).forEach(row => {
+      const input = row.querySelector('input')
+
+      if (input.value) {
+        array.push(parseInt(input.value))
+      } else {
+        array.push(0)
+      }
+    })
+  }
+
   // Pulsanti header
   document.getElementById('login-btn').addEventListener('click', showLogin)
   document.getElementById('register-btn').addEventListener('click', showRegister)
@@ -51,12 +63,15 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
             body: JSON.stringify({ nome: username, pswd: password }),
           })
 
-          if (response.ok) {
-            showContent()
-          } else {
+          if (!response.ok) {
             const error = await response.json()
             alert(`Errore nel ${formId.replace('-form', '')}: ${error.message}`)
-          }
+          } 
+          const data = await response.json()
+
+          // salva il token
+          localStorage.setItem('token', data.access_token)
+          showContent()
         } catch (err) {
           console.error(err)
           alert('Errore di connessione al server')
@@ -71,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
   setupFormSubmission('login-form', 'auth/login')
   setupFormSubmission('register-form', 'users/register')
 
-
   // Invio voti
   // Changed port to 8001
   document.querySelector('.content-form').addEventListener('submit', async (e) => {
@@ -80,21 +94,8 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
     const votesRistorante = []
     const votesData = []
 
-    document.querySelectorAll('.item-row-ristorante').forEach(row => {
-      const input = row.querySelector('input')
-
-      if (input.value) {
-        votesRistorante.push(parseInt(input.value))
-      }
-    })
-
-    document.querySelectorAll('.item-row-data').forEach(row => {
-      const input = row.querySelector('input')
-
-      if (input.value) {
-        votesData.push(parseInt(input.value))
-      }
-    })
+    pushVotesData(votesRistorante, 'ristorante')
+    pushVotesData(votesData, 'data')
 
     try {
       // Corrected port to 8001
@@ -102,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         },
         body: JSON.stringify({ votesRistorante, votesData }),
       })
