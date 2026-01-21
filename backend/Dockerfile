@@ -5,17 +5,18 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy the requirements file into the container
-COPY backend/requirements.txt .
+COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the backend application code into the container
-COPY ./backend /app
+COPY . .
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
+# Make port 8080 available to the world outside this container
+EXPOSE 8080
 
 # Run uvicorn when the container launches
 # The --host 0.0.0.0 is important to make it accessible from outside the container
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# The port is set to 8080 to match the docker-compose.yml
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

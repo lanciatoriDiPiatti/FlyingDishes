@@ -14,27 +14,26 @@ services:
 
   backend:
     build:
-      context: ./  # cartella con Dockerfile
-      dockerfile: Dockerfile
+      context: ./backend
     container_name: flying_dishes_backend
     ports:
-      - "8001:8080"  # cambia a 8080 per Cloud Run compatibilità
+      - "8001:8080"
     depends_on:
       - db
     environment:
       DATABASE_URL: "postgresql://postgres:password@db:5432/flying_dishes"
-      PORT: 8080  # aggiungi questo!
+      PORT: 8080
     restart: unless-stopped
 
   frontend:
-    image: nginx:alpine
-    user: "0:0"  # ROOT per Windows!
+    build:
+      context: ./frontend
+    container_name: flying_dishes_frontend
     ports:
       - "80:80"
-    volumes:
-      - ./frontend:/usr/share/nginx/html:ro
-      - ./frontend/nginx.conf:/etc/nginx/nginx.conf:ro
-
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
+  postgres_data: {}
