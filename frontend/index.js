@@ -1,108 +1,123 @@
-const registerForm = document.getElementById('register-form')
-const loginForm = document.getElementById('login-form')
-const formsContainer = document.querySelector('.forms')
-const content = document.querySelector('.content')
+document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMContentLoaded
 
-// Funzioni di visibilità
-function showLogin() {
-  formsContainer.hidden = false
-  loginForm.hidden = false
-  registerForm.hidden = true
-  content.hidden = true
-}
+  const registerForm = document.getElementById('register-form')
+  const loginForm = document.getElementById('login-form')
+  const formsContainer = document.querySelector('.forms')
+  const content = document.querySelector('.content')
 
-function showRegister() {
-  formsContainer.hidden = false
-  registerForm.hidden = false
-  loginForm.hidden = true
-  content.hidden = true
-}
+  // Funzioni di visibilità
+  function showLogin() {
+    formsContainer.hidden = false
+    loginForm.hidden = false
+    registerForm.hidden = true
+    content.hidden = true
+  }
 
-function showContent() {
-  formsContainer.hidden = true
-  loginForm.hidden = true
-  registerForm.hidden = true
-  content.hidden = false
-}
+  function showRegister() {
+    formsContainer.hidden = false
+    registerForm.hidden = false
+    loginForm.hidden = true
+    content.hidden = true
+  }
 
-// Pulsanti header
-document.getElementById('login-btn').addEventListener('click', showLogin)
-document.getElementById('register-btn').addEventListener('click', showRegister)
+  function showContent() {
+    formsContainer.hidden = true
+    loginForm.hidden = true
+    registerForm.hidden = true
+    content.hidden = false
+  }
 
-// Login / Register
-function postData(formType) {
-  const form = document.getElementById(`${formType}-form`)
+  // Pulsanti header
+  document.getElementById('login-btn').addEventListener('click', showLogin)
+  document.getElementById('register-btn').addEventListener('click', showRegister)
 
-  form.addEventListener('submit', async (e) => {
+  // Login / Register
+  // Modified postData to accept formId and apiPath
+  function setupFormSubmission(formId, apiPath) {
+    const form = document.getElementById(formId)
+
+    if (form) { // Add null check for robustness
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+
+        const username = document.getElementById(`${formId.replace('-form', '')}-name`).value // Extract form prefix
+        const password = document.getElementById(`${formId.replace('-form', '')}-pswd`).value
+
+        try {
+          // Corrected port to 8001 and used apiPath
+          const response = await fetch(`http://127.0.0.1:8001/${apiPath}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome: username, pswd: password }),
+          })
+
+          if (response.ok) {
+            showContent()
+          } else {
+            const error = await response.json()
+            alert(`Errore nel ${formId.replace('-form', '')}: ${error.message}`)
+          }
+        } catch (err) {
+          console.error(err)
+          alert('Errore di connessione al server')
+        }
+      })
+    } else {
+      console.error(`Form with ID "${formId}" not found.`)
+    }
+  }
+
+  // Call setupFormSubmission with correct form IDs and API paths
+  setupFormSubmission('login-form', 'auth/login')
+  setupFormSubmission('register-form', 'users/register')
+
+
+  // Invio voti
+  // Changed port to 8001
+  document.querySelector('.content-form').addEventListener('submit', async (e) => {
     e.preventDefault()
 
-    const username = document.getElementById(`${formType}-name`).value
-    const password = document.getElementById(`${formType}-pswd`).value
+    const votesRistorante = []
+    const votesData = []
+
+    document.querySelectorAll('.item-row-ristorante').forEach(row => {
+      const input = row.querySelector('input')
+
+      if (input.value) {
+        votesRistorante.push(parseInt(input.value))
+      }
+    })
+
+    document.querySelectorAll('.item-row-data').forEach(row => {
+      const input = row.querySelector('input')
+
+      if (input.value) {
+        votesData.push(parseInt(input.value))
+      }
+    })
 
     try {
-      const response = await fetch(`http://127.0.0.1:8080/${formType}`, {
+      // Corrected port to 8001
+      const response = await fetch('http://127.0.0.1:8001/votation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ votesRistorante, votesData }),
       })
 
       if (response.ok) {
-        showContent()
+        alert('Voti inviati con successo!')
+        document.querySelectorAll('.content-form input').forEach(i => (i.value = ''))
       } else {
         const error = await response.json()
-        alert(`Errore nel ${formType}: ${error.message}`)
+        alert("Errore nell'invio: " + error.message)
       }
     } catch (err) {
       console.error(err)
       alert('Errore di connessione al server')
     }
   })
-}
 
-registerForm.hidden ? postData('login') : postData('users/register') 
+}); // End DOMContentLoaded
 
-
-// Invio voti
-document.querySelector('.content-form').addEventListener('submit', async (e) => {
-  e.preventDefault()
-
-  const votesRistorante = []
-  const votesData = []
-
-  document.querySelectorAll('.item-row-ristorante').forEach(row => {
-    const input = row.querySelector('input')
-
-    if (input.value) {
-      votesRistorante.push(parseInt(input.value))
-    }
-  })
-
-  document.querySelectorAll('.item-row-data').forEach(row => {
-    const input = row.querySelector('input')
-
-    if (input.value) {
-      votesData.push(parseInt(input.value))
-    }
-  })
-
-  try {
-    const response = await fetch('http://127.0.0.1:8080/votation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ votesRistorante, votesData }),
-    })
-
-    if (response.ok) {
-      alert('Voti inviati con successo!')
-      document.querySelectorAll('.content-form input').forEach(i => (i.value = ''))
-    } else {
-      const error = await response.json()
-      alert("Errore nell'invio: " + error.message)
-    }
-  } catch (err) {
-    console.error(err)
-    alert('Errore di connessione al server')
-  }
-})
