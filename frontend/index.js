@@ -39,6 +39,26 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
     })
   }
 
+  function appendDataToHtml(data, tableEl, list) {
+    tableEl.innerHTML = '' // pulisce la tabella prima
+
+    data.nome.forEach((nome, index) => {
+      const tr = document.createElement('tr')
+
+      // colonna nome
+      const tdNome = document.createElement('td')
+      tdNome.textContent = list[nome]
+      tr.appendChild(tdNome)
+
+      // colonna valore
+      const tdValore = document.createElement('td')
+      tdValore.textContent = data.valori[index] ?? 0
+      tr.appendChild(tdValore)
+
+      tableEl.appendChild(tr)
+    })
+  }
+
   // Pulsanti header
   document.getElementById('login-btn').addEventListener('click', showLogin)
   document.getElementById('register-btn').addEventListener('click', showRegister)
@@ -121,5 +141,32 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
     }
   })
 
+  document.querySelector('.show-result').addEventListener('click', async () => {
+    const rawData = await fetch('http://127.0.0.1:8001/votation/standings', {
+      method: 'GET',
+      headers: {'Content-Type': 'application/json'}
+    })
+    const data = rawData.json()
+
+    const lists = {
+      ristoranti: ['McDonald', 'Sushi', 'Kebabbaro', 'Trattoria', 'Pizzeria'],
+      date: ['19/01/2026', '20/01/2026', '21/01/2026', '22/01/2026', '26/01/2026', '27/01/2026', '28/01/2026', '29/01/2026']
+    }
+
+    const tableRistoranti = document.querySelector('.table-ristoranti')
+    const tableDate = document.querySelector('.table-date')
+
+    appendDataToHtml(data.ristoranti, tableRistoranti, lists.ristoranti)
+    appendDataToHtml(data.date, tableDate, lists.date)
+
+    const rawVincitori = await fetch('http://127.0.0.1/votation/final_choice', {
+      method: 'GET',
+      headers: {'Content-Type': 'application/json'}
+    })
+    const vincitori = rawVincitori.json()
+
+    document.querySelector('.data-vincitore').textContent = lists.date[vincitori[0]]
+    document.querySelector('.ristorante-vincitore').textContent = lists.ristoranti[vincitori[1]]
+  })
 }); // End DOMContentLoaded
 
