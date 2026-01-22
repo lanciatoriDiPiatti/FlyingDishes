@@ -22,3 +22,4 @@ def create_user(db: Session, user: UserCreateSchema) -> Union[User, None]:
     return new_user
     
 
+# def make_user_eat_too_much(user):

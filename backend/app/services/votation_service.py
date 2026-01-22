@@ -4,7 +4,9 @@ from app.models.user import User
 from sqlalchemy.orm import Session
 from app.models.food import Food
 from app.models.day import Day
-import backend.app.algo as algo
+import app.algo as algo
+from sqlalchemy.orm.attributes import flag_modified
+
 
 # Here we implement function to submit votation
 def submit_votation(db: Session, voter_id: int, day_votes: list[int], food_votes: list[int]):
@@ -27,12 +29,14 @@ def submit_votation(db: Session, voter_id: int, day_votes: list[int], food_votes
         day = db.query(Day).filter(Day.id == index + 1).first()
         if day:
             day.votes.append(vote)
+            flag_modified(day, "votes")
     
     # We do the same thing for the Ristoranti (food)
     for index, vote in enumerate(food_votes):
         food = db.query(Food).filter(Food.id == index + 1).first()
         if food:
             food.votes.append(vote)
+            flag_modified(food, "votes")
     
     # After updating the votes arrays, we need to recalculate the averages
     init_avg_computation(db)
@@ -55,16 +59,12 @@ def init_avg_computation(db: Session):
     days = db.query(Day).all()
     for day in days:
         day.current_avg = calculate_average(day.votes)
-        day.current_var = calculate_pvariance(day.votes)
         current_avg_list_days.append(day.current_avg)
-        current_mean_list_days.append(day.current_var)
 
     foods = db.query(Food).all()
     for food in foods:
         food.current_avg = calculate_average(food.votes)
-        food.current_var = calculate_pvariance(food.votes)
         current_avg_list_foods.append(food.current_avg)
-        current_mean_list_foods.append(food.current_var)
 
 
 def calculate_average(votes_list: list[int]) -> float:
@@ -84,3 +84,18 @@ def final_choice_days(average: list[int], mean: list[float]) -> int:
 
 def final_choice_foods(average: list[int], mean: list[float]) -> int:
     return algo.final_choice(current_avg_list_foods, current_mean_list_foods)
+
+def get_current_avgs(db: Session):
+    # Inizializza con liste vuote [], non con null
+    food_avgs = []
+    foods = db.query(Food).all()
+    for food in foods:
+        food_avgs.append(food.current_avg)
+
+    data_avgs = []
+    dates = db.query(Day).all()
+    for date in dates:
+        # Usa 'date' (l'istanza del ciclo), non 'Day' (la classe)
+        data_avgs.append(date.current_avg)
+
+    return {"food": food_avgs, "days": data_avgs} 

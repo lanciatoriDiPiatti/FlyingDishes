@@ -35,5 +35,6 @@ def create_votation(
 
 
 @router.get("/standigs",status_code=status.HTTP_200_OK)
-def get_currente_results(db: Session = Depends(get_db)):
-    return get_current_avgs(db=db)
+def get_current_results(db: Session = Depends(get_db)):
+    current_avgs = get_current_avgs(db)
+    return current_avgs
