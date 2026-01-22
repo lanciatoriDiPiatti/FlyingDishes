@@ -32,10 +32,9 @@ def create_votation(
     # current_user.id è il voter id (estratto dal token nella dependency)
     submit_votation(
         db,
-        day_votes,
-        food_votes,
         voter_id=current_user.id,
-        
+        day_votes = day_votes,
+        food_votes = food_votes,
     )
     return {"ok": True}
 
