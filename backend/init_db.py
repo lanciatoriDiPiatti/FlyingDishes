@@ -4,8 +4,10 @@ Script per inizializzare il database PostgreSQL
 Esegui questo script prima di avviare l'applicazione
 """
 
+
+import logging
 from app.db.base import Base
-from app.db.session import engine
+from app.db.session import engine, SessionLocal 
 from app.models import User, Food, Day
 
 print("🔨 Inizializzazione del database...")

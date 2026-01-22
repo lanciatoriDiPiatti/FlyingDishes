@@ -10,7 +10,7 @@ def calculate_pvariance(data: list[float]) -> float:
     print(statistics.pvariance(data))
     return statistics.pvariance(data)
 
-def final_choice(average: list[int], mean: list[float]):
+def final_choice(average: list[float], var: list[float]):
     max_avg = 0
     list_max_avg = []
     index = []
@@ -34,7 +34,7 @@ def final_choice(average: list[int], mean: list[float]):
         choice_index = []
         n2 = 0 
         while n2 < len(index):
-            b = mean[index[n2]]
+            b = var[index[n2]]
             if b < min_pv:
                 min_pv = b
                 choice_index = [index[n2]]

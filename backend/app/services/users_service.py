@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreateSchema
 from app.core.security import get_password_hash
+import random
 
 
 # Here The creation of a user and insertion into the database is managed
@@ -15,11 +16,23 @@ def create_user(db: Session, user: UserCreateSchema) -> Union[User, None]:
         return None
 
     hashed_password = get_password_hash(user.pswd)
-    new_user = User(nome=user.nome, hashed_pswd=hashed_password)
+    eated = make_user_eat_too_much(db)
+    new_user = User(nome=user.nome, hashed_pswd=hashed_password, fat = eated)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
     
 
-# def make_user_eat_too_much(user):
+def make_user_eat_too_much(db: Session):
+    # controllo che ci siano già degli utenti "fat"
+    max_fat_people = 2
+    fat_users = db.query(User).filter(User.fat == True).all()
+    #se non ho ancora abbastanza "fat" users
+    if len(fat_users) < max_fat_people:
+        # Random per determinare se fat user
+        num = random.randint(1,10)
+        if num > 7:
+            return True
+    return False
+

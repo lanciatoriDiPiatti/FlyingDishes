@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
 
     try {
       // Corrected port to 8001
-      const response = await fetch('http://127.0.0.1:8001/votation', {
+      const response = await fetch('http://127.0.0.1:8001/votation/yavc', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

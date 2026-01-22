@@ -1,6 +1,7 @@
 # controllers/votation_controller.py
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
+from typing import Any, Dict
 
 from app.db.session import get_db
 from app.schemas.votation import VotationIn
@@ -8,6 +9,8 @@ from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.services.votation_service import submit_votation
 from app.services.votation_service import get_current_avgs
+from app.services.votation_service import final_choice_days, final_choice_foods
+
 
 router = APIRouter()
 
@@ -39,7 +42,37 @@ def create_votation(
     return {"ok": True}
 
 
-@router.get("/standigs",status_code=status.HTTP_200_OK)
+@router.get("/standings",status_code=status.HTTP_200_OK)
 def get_current_results(db: Session = Depends(get_db)):
     current_avgs = get_current_avgs(db)
     return current_avgs
+
+
+@router.post("/yavc", status_code= status.HTTP_200_OK )
+def debug_votation(
+    payload: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+    ):
+    # Estrazione manuale dei dati
+    day_votes = payload.get("votesData", [])
+    food_votes = payload.get("votesRistorante", [])
+    current_user_id = current_user.id
+    
+    # Debug print
+    print(f"DEBUG - Day Votes: {day_votes}")
+    print(f"DEBUG - Food Votes: {food_votes}")
+    print(f"DEBUG - user: {current_user_id}")
+
+    submit_votation(
+        db,
+        current_user_id,
+        day_votes,
+        food_votes
+    )
+
+    @router.get("/final_choice", status_code=status.HTTP_200_OK)
+    def get_final_choice(db: Session = Depends(get_db)):
+        day_winner = final_choice_days
+        food_winner = final_choice_foods
+        return {final_choice_days, final_choice_foods}

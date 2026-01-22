@@ -9,4 +9,4 @@ class User(Base):
     nome = Column(String, unique=True, index=True)
     hashed_pswd = Column(String)
     has_voted = Column(Boolean, default=False)
-    fat = Column(Boolean, default=False)
+    fat = Column(Boolean)

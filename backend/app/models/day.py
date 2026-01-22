@@ -11,3 +11,4 @@ class Day(Base):
     nome = Column(String, unique=True, index=True)
     votes = Column(ARRAY(Integer), default=[])
     current_avg = Column(Float, default=0.0)
+    current_var = Column(Float, dafault = 0.0)
