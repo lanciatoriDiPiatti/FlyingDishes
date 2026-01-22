@@ -26,10 +26,10 @@ def create_votation(
 ):
     # current_user.id è il voter id (estratto dal token nella dependency)
     submit_votation(
-        db=db,
+        db,
         voter_id=current_user.id,
-        day_votes=payload.Data,
-        food_votes=payload.Ristoranti,
+        day_votes=payload.votesData,
+        food_votes=payload.votesRistorante,
     )
     return {"ok": True}
 
