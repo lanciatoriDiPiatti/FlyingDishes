@@ -10,39 +10,37 @@ from sqlalchemy.orm.attributes import flag_modified
 
 # Here we implement function to submit votation
 def submit_votation(db: Session, voter_id: int, day_votes: list[int], food_votes: list[int]):
-    # firstly we need to check if the User that is trying to vote has already voted
-    # This logic is not implemented yet, but we will assume that the voter_id is valid
-
-    user= db.query(User).filter(User.id == voter_id).first()
+    # 1. Controllo utente con HTTPException
+    user = db.query(User).filter(User.id == voter_id).first()
     if not user:
-        raise Exception("User not found")
+        raise HTTPException(status_code=404, detail="User not found")
     if user.has_voted:
-        raise Exception("User has already voted")
-    
-    # If the user has not voted yet, we set his has_voted field to True
-    user.has_voted = True
-    
+        raise HTTPException(status_code=400, detail="User has already voted")
 
-    # We take the array of day_votes and add all the elements to the corresponding day entity
-    # to get the right day, we look at the index of the array
+    user.has_voted = True
+
+    # 2. Ottimizzazione: Caricamento batch per i giorni
+    days = db.query(Day).filter(Day.id.in_([i + 1 for i in range(len(day_votes))])).all()
+    day_map = {d.id: d for d in days}
     for index, vote in enumerate(day_votes):
-        day = db.query(Day).filter(Day.id == index + 1).first()
+        day = day_map.get(index + 1)
         if day:
             day.votes.append(vote)
-            flag_modified(day, "votes")
-    
-    # We do the same thing for the Ristoranti (food)
+            flag_modified(day, "votes") # Necessario se non usi MutableList [web:20]
+
+    # 3. Ottimizzazione: Caricamento batch per i ristoranti
+    foods = db.query(Food).filter(Food.id.in_([i + 1 for i in range(len(food_votes))])).all()
+    food_map = {f.id: f for f in foods}
     for index, vote in enumerate(food_votes):
-        food = db.query(Food).filter(Food.id == index + 1).first()
+        food = food_map.get(index + 1)
         if food:
             food.votes.append(vote)
             flag_modified(food, "votes")
-    
-    # After updating the votes arrays, we need to recalculate the averages
-    init_avg_computation(db)
 
-    # Final commit of the db after modifications
-    db.commit()
+    # 4. Elaborazione e persistenza
+    init_avg_computation(db)
+    db.commit() # Salva tutte le modifiche in una singola transazione [web:12]
+    db.refresh(user)
 
 
 current_avg_list_days = []

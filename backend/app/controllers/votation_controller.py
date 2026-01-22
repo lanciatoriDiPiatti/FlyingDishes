@@ -24,7 +24,7 @@ def create_votation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db = db
+    print(payload)
     day_votes=payload.votesData
     food_votes=payload.votesRistorante
     print(day_votes)
