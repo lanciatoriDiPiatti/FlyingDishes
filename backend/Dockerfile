@@ -19,4 +19,4 @@ EXPOSE 8080
 # Run uvicorn when the container launches
 # The --host 0.0.0.0 is important to make it accessible from outside the container
 # The port is set to 8080 to match the docker-compose.yml
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["sh", "-c", "python init_db.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]

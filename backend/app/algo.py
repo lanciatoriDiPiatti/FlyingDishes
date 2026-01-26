@@ -7,6 +7,8 @@ def calculate_average(data: list[int]) -> float:
     return sum(data) / len(data)
 
 def calculate_pvariance(data: list[float]) -> float:
+    if len(data) < 2:
+        return 0.0
     print(statistics.pvariance(data))
     return statistics.pvariance(data)
 

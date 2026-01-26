@@ -1,0 +1,137 @@
+steps:
+  # Build and Push Backend Image
+  - id: 'Build and Push Backend'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/backend:$COMMIT_SHA'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/backend:latest'
+      - './backend'
+    dir: '.'
+
+  - id: 'Push Backend Image'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/backend:$COMMIT_SHA'
+
+  # Build and Push Frontend Image
+  - id: 'Build and Push Frontend'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:$COMMIT_SHA'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:latest'
+      - './frontend'
+    dir: '.'
+
+  - id: 'Push Frontend Image'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:$COMMIT_SHA'
+
+  # Deploy Backend Service to Cloud Run
+  - id: 'Deploy Backend Service'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'flying-dishes-backend'
+      - '--image'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/backend:$COMMIT_SHA'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated' # Adjust if authentication is desired
+      - '--set-env-vars'
+      - 'DATABASE_URL=postgresql://user:password@/flying_dishes?host=/cloudsql/$PROJECT_ID:europe-west1:your-cloudsql-instance' # REPLACE WITH YOUR CLOUD SQL CONNECTION STRING
+      - '--set-env-vars'
+      - 'CORS_ORIGINS=https://flying-dishes-frontend-YOUR_ID.run.app' # This will be updated after frontend deployment
+      - '--port'
+      - '8080' # Ensure this matches the EXPOSE in Dockerfile and Uvicorn's binding
+    waitFor: ['Push Backend Image']
+
+  # Deploy Frontend Service to Cloud Run
+  - id: 'Deploy Frontend Service'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'flying-dishes-frontend'
+      - '--image'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:$COMMIT_SHA'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated' # Adjust if authentication is desired
+      - '--set-env-vars'
+      - 'API_BASE_URL=https://flying-dishes-backend-YOUR_ID.run.app' # This will be updated with the actual backend service URL
+    waitFor: ['Push Frontend Image', 'Deploy Backend Service'] # Wait for backend deployment to get its URL
+    secretEnv: ['BACKEND_SERVICE_URL']
+
+substitutions:
+  _API_BASE_URL: https://flying-dishes-backend-YOUR_ID.run.app # Placeholder for frontend index.html replacement
+
+# This step is to replace the placeholder in index.html with the actual backend service URL
+# This needs to run AFTER the backend service is deployed so we have its URL
+  - id: 'Replace Frontend API_BASE_URL'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        BACKEND_URL=$(gcloud run services describe flying-dishes-backend --platform managed --region europe-west1 --format='value(status.url)')
+        sed -i "s|https://your-backend-service-url.run.app|$BACKEND_URL|g" frontend/index.html
+    waitFor: ['Deploy Backend Service']
+
+  - id: 'Rebuild and Push Frontend Image with correct API_BASE_URL'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:$COMMIT_SHA-api-url-updated'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:latest-api-url-updated'
+      - './frontend'
+    dir: '.'
+    waitFor: ['Replace Frontend API_BASE_URL']
+
+  - id: 'Push Frontend Image with correct API_BASE_URL'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:$COMMIT_SHA-api-url-updated'
+    waitFor: ['Rebuild and Push Frontend Image with correct API_BASE_URL']
+
+  - id: 'Redeploy Frontend Service with correct API_BASE_URL'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'flying-dishes-frontend'
+      - '--image'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:$COMMIT_SHA-api-url-updated'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+    waitFor: ['Push Frontend Image with correct API_BASE_URL']
+
+images:
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/backend:$COMMIT_SHA'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/backend:latest'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:$COMMIT_SHA'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:latest'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:$COMMIT_SHA-api-url-updated'
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/flying-dishes-repo/frontend:latest-api-url-updated'

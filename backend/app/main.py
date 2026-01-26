@@ -18,6 +18,11 @@ origins = [
     "http://127.0.0.1:80",
 ]
 
+import os
+# Add origins from environment variable for Cloud Run deployment
+if os.getenv("CORS_ORIGINS"):
+    origins.extend(os.getenv("CORS_ORIGINS").split(","))
+
 # Aggiungi il middleware CORS all'applicazione
 app.add_middleware(
     CORSMiddleware,

@@ -39,6 +39,49 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
     })
   }
 
+  function appendDataToHtml(data, tableEl, list) {
+    tableEl.innerHTML = '' // pulisce la tabella prima
+
+    data.nome.forEach((nome, index) => {
+      const tr = document.createElement('tr')
+
+      // colonna nome
+      const tdNome = document.createElement('td')
+      tdNome.textContent = list[nome]
+      tr.appendChild(tdNome)
+
+      // colonna valore
+      const tdValore = document.createElement('td')
+      tdValore.textContent = data.valori[index] ?? 0
+      tr.appendChild(tdValore)
+
+      tableEl.appendChild(tr)
+    })
+  }
+
+  // Funzione specifica per fare append di valori e non oggetti:
+  // Risolve problemi con le tabelle dei "vincitori"
+  function appendStandingsToTable(valuesArray, tableElement, labelsArray) {
+    // 1. Svuota la tabella (evita che i dati si accumulino se clicchi più volte)
+    tableElement.innerHTML = '';
+
+    // 2. Cicla usando l'array delle etichette (nomi ristoranti o date)
+    labelsArray.forEach((label, index) => {
+        const row = document.createElement('tr');
+        
+        // Recupera il valore corrispondente dal backend usando l'indice
+        // Se il valore manca, metti "0.0" o "N/D"
+        const value = valuesArray[index] !== undefined ? valuesArray[index] : "0.0";
+
+        row.innerHTML = `
+            <td>${label}</td>
+            <td><strong>${value}</strong></td>
+        `;
+        
+        tableElement.appendChild(row);
+    });
+}
+
   // Pulsanti header
   document.getElementById('login-btn').addEventListener('click', showLogin)
   document.getElementById('register-btn').addEventListener('click', showRegister)
@@ -57,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
 
         try {
           // Corrected port to 8001 and used apiPath
-          const response = await fetch(`http://127.0.0.1:8001/${apiPath}`, {
+          const response = await fetch(`${window.API_BASE_URL}/${apiPath}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nome: username, pswd: password }),
@@ -99,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
 
     try {
       // Corrected port to 8001
-      const response = await fetch('http://127.0.0.1:8001/votation/yavc', {
+      const response = await fetch(`${window.API_BASE_URL}/votation/votation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,5 +164,42 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
     }
   })
 
-}); // End DOMContentLoaded
+  document.querySelector('.show-result').addEventListener('click', async () => {
+    const rawData = await fetch(`${window.API_BASE_URL}/votation/standings`, {
+      method: 'GET',
+      headers: {'Content-Type': 'application/json'}
+    })
+    const data = await rawData.json()
 
+    // Debug part to check incoming/received data
+    console.log("Dati ricevuti dal backend:", data);
+    console.log("Lista Ristoranti (Averages):", data.ristoranti);
+    console.log("Lista Date (Averages):", data.date);
+
+
+    const lists = {
+      ristoranti: ['McDonald', 'Sushi', 'Kebabbaro', 'Trattoria', 'Pizzeria'],
+      date: ['19/01/2026', '20/01/2026', '21/01/2026', '22/01/2026', '26/01/2026', '27/01/2026', '28/01/2026', '29/01/2026']
+    }
+
+    const tableRistoranti = document.querySelector('.table-ristoranti')
+    const tableDate = document.querySelector('.table-date')
+
+    appendStandingsToTable(data.ristoranti, tableRistoranti, lists.ristoranti)
+    appendStandingsToTable(data.date, tableDate, lists.date)
+
+
+    const rawVincitori = await fetch(`${window.API_BASE_URL}/votation/final_choice`, {
+      method: 'GET',
+      headers: {'Content-Type': 'application/json'}
+    })
+    const vincitori = await rawVincitori.json()
+
+    const indiceData = vincitori["data-vincitore"];
+    const indiceRistorante = vincitori["ristorante-vincitore"];
+
+    // Inseriamo il testo nelle classi HTML corrispondenti
+    document.querySelector('.data-vincitore').textContent = lists.date[indiceData] || "N/D";
+    document.querySelector('.ristorante-vincitore').textContent = lists.ristoranti[indiceRistorante] || "N/D";
+  })
+}); // End DOMContentLoaded

@@ -45,6 +45,7 @@ def create_votation(
 @router.get("/standings",status_code=status.HTTP_200_OK)
 def get_current_results(db: Session = Depends(get_db)):
     current_avgs = get_current_avgs(db)
+    print(f"{current_avgs}")
     return current_avgs
 
 
@@ -71,8 +72,8 @@ def debug_votation(
         food_votes
     )
 
-    @router.get("/final_choice", status_code=status.HTTP_200_OK)
-    def get_final_choice(db: Session = Depends(get_db)):
-        day_winner = final_choice_days
-        food_winner = final_choice_foods
-        return {final_choice_days, final_choice_foods}
+@router.get("/final_choice", status_code=status.HTTP_200_OK)
+def get_final_choice(db: Session = Depends(get_db)):
+    day_winner = final_choice_days(db)
+    food_winner = final_choice_foods(db)
+    return {"data-vincitore": day_winner,"ristorante-vincitore": food_winner}

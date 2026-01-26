@@ -23,6 +23,7 @@ services:
     environment:
       DATABASE_URL: "postgresql://postgres:password@db:5432/flying_dishes"
       PORT: 8080
+    command: ["/bin/sh", "-c", "python init_db.py && uvicorn app.main:app --host 0.0.0.0 --port 8080"]
     restart: unless-stopped
 
   frontend:

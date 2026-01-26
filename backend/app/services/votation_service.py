@@ -25,27 +25,30 @@ def submit_votation(db: Session, voter_id: int, day_votes: list[int], food_votes
     # Se non ha ancora votato set della flag su true
     user.has_voted = True
 
-    # Prendo i dati della votazione dei giorni uno alla vola seguendo l'indice
-    for index in range(len(day_votes)):
-        # ogni indice = id del giorno nella tabella del db
-        # trovo il giorno corrispondente
-        day = db.query(Day).filter(Day.id == index + 1).first()
-        # aggiungo il voto all'entità
-        day.votes.append(day_votes(index))
-        flag_modified(day, "votes")
+    # Ottimizzazione: Caricamento batch per i giorni
+    days = db.query(Day).filter(Day.id.in_([i + 1 for i in range(len(day_votes))])).all()
+    day_map = {d.id: d for d in days}
+    for index, vote in enumerate(day_votes):
+        day = day_map.get(index + 1)
+        if day:
+            day.votes.append(vote)
+            flag_modified(day, "votes")
 
     # Faccio lo stesso per i ristoranti
-    for index in range(len(food_votes)):
-        food = db.query(Food).filter(Food.id == index + 1).first()
-        # aggiungo il voto all'entità
-        food.votes.append(food_votes(index))
-        flag_modified(food, "votes")
+    foods = db.query(Food).filter(Food.id.in_([i + 1 for i in range(len(food_votes))])).all()
+    food_map = {f.id: f for f in foods}
+    for index, vote in enumerate(food_votes):
+        food = food_map.get(index + 1)
+        if food:
+            food.votes.append(vote)
+            flag_modified(food, "votes")
 
     # Una volta inseriti tutti i dati, chiamo il calcolo della media
     init_avg_computation(db)
 
     # commit del db
     db.commit()
+    db.refresh(user)
 
 
 
@@ -59,13 +62,15 @@ def init_avg_computation(db: Session):
     days = db.query(Day).all()
     for day in days:
         day.current_avg = calculate_average(day.votes)
+        day.current_var = calculate_pvariance(day.votes)
 
     foods = db.query(Food).all()
     for food in foods:
         food.current_avg = calculate_average(food.votes)
+        food.current_var = calculate_pvariance(food.votes)
 
 
-def calculate_average(votes_list: list[int], id) -> float:
+def calculate_average(votes_list: list[int]) -> float:
     if not votes_list:
         return 0.0
     else:
@@ -124,4 +129,4 @@ def get_current_avgs(db: Session):
         # Usa 'date' (l'istanza del ciclo), non 'Day' (la classe)
         data_avgs.append(date.current_avg)
 
-    return {"food": food_avgs, "days": data_avgs} 
+    return {"ristoranti": food_avgs, "date": data_avgs}
