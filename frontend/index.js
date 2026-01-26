@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
 
         try {
           // Corrected port to 8001 and used apiPath
-          const response = await fetch(`http://127.0.0.1:8001/${apiPath}`, {
+          const response = await fetch(`http://thecibo.velolab.cc:8001/${apiPath}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nome: username, pswd: password }),
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => { // Wrap everything in DOMC
 
     try {
       // Corrected port to 8001
-      const response = await fetch('http://127.0.0.1:8001/votation/yavc', {
+      const response = await fetch('http://thecibo.velolab.cc/votation/yavc', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
